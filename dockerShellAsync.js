@@ -2,21 +2,25 @@ const { spawn } = require("child_process");
 
 const dockerImageLsAsync = new Promise((resolve, reject) => {
   const dockerImageLsProc = spawn("docker", ["image", "ls"]);
-  let procData = "";
+  let procByteData = "";
   dockerImageLsProc.stdout.on("data", dataChunk => {
-    procData += dataChunk;
+    procByteData += dataChunk;
   });
 
   dockerImageLsProc.on("close", exitCode => {
-    if (exitCode !== 0) {
+    if (isCommandExecutionUnsuccessful(exitCode)) {
       reject("command failed");
     } else {
-      resolve(procData);
+      resolve(procByteData);
     }
   });
 });
 
 dockerImageLsAsync.then(data => console.log(commandReponseToObject(data)));
+
+function isCommandExecutionUnsuccessful(exitCode) {
+  return exitCode !== 0;
+}
 
 function commandReponseArrayFromByteStream(byteStreamResponse) {
   const commandResponseString = byteStreamResponse.toString();
@@ -33,7 +37,7 @@ function commandReponseToObject(byteStreamResponse) {
   };
 
   commandResponseArray.forEach((rowContent, index) => {
-    if (isNotEmptyContentLine(index, rowContent)) {
+    if (isNotEmptyContentLine(rowContent, index)) {
       const commandReponse = extractCommandReponseFromRow(rowContent);
       commandResponseObject.dockerImages.push(commandReponse);
     }
@@ -42,7 +46,7 @@ function commandReponseToObject(byteStreamResponse) {
   return commandResponseObject;
 }
 
-function isNotEmptyContentLine(index, rowContent) {
+function isNotEmptyContentLine(rowContent, index) {
   return index > 0 && isNotEmptyLine(rowContent);
 }
 
