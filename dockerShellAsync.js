@@ -33,13 +33,21 @@ function commandReponseToObject(byteStreamResponse) {
   };
 
   commandResponseArray.forEach((rowContent, index) => {
-    if (index > 0 && rowContent !== "") {
+    if (isNotEmptyContentLine(index, rowContent)) {
       const commandReponse = extractCommandReponseFromRow(rowContent);
       commandResponseObject.dockerImages.push(commandReponse);
     }
   });
 
   return commandResponseObject;
+}
+
+function isNotEmptyContentLine(index, rowContent) {
+  return index > 0 && isNotEmptyLine(rowContent);
+}
+
+function isNotEmptyLine(rowContent) {
+  return rowContent !== "";
 }
 
 function extractCommandReponseFromRow(rowContent) {
