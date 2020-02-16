@@ -30,5 +30,41 @@ function docker(dockerCommandAndArgs) {
 }
 
 docker(["ps", "-a"])
-  .then(data => console.log(data.toString()))
+  .then(data => console.log(objectFromByteData(data)))
   .catch(err => console.log(err));
+
+function objectFromByteData(byteData) {
+  const byteDataAsString = byteData.toString();
+  const dataArray = arrayFromDataString(byteDataAsString);
+  let responseObject = {
+    containers: []
+  };
+  dataArray.forEach((arrayRow, index) => {
+    if (isNotEmptyContentRow(index, arrayRow)) {
+      const containerData = extractDataFromDataArrayRow(arrayRow);
+      responseObject.containers.push(containerData);
+    }
+  });
+  return responseObject;
+}
+
+function isNotEmptyContentRow(index, arrayRow) {
+  return index > 0 && !isEmptyRow(arrayRow);
+}
+
+function isEmptyRow(arrayRow) {
+  return arrayRow === "";
+}
+
+function extractDataFromDataArrayRow(dataArrayRow) {
+  const whiteSpace = /\s+/g;
+  const [containerId, imageName] = dataArrayRow.split(whiteSpace);
+  return {
+    containerId,
+    imageName
+  };
+}
+
+function arrayFromDataString(dataString) {
+  return dataString.split("\n");
+}
